@@ -1,0 +1,513 @@
+@import 'leaflet/dist/leaflet.css';
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap');
+
+// ── Design Tokens ─────────────────────────────────────────
+:root {
+  --bg:            #F5F0EB;
+  --bg-alt:        #EDE6DE;
+  --bg-card:       #FFFFFF;
+  --text:          #2C2824;
+  --text-secondary:#8A7E72;
+  --text-caption:  #B0A698;
+  --accent:        #A67C52;
+  --accent-muted:  #C6A882;
+  --border:        #DDD5CA;
+  --overlay:       rgba(44, 40, 36, 0.55);
+
+  --font-serif:    'Cormorant Garamond', Georgia, serif;
+  --font-sans:     'Inter', -apple-system, Helvetica Neue, Arial, sans-serif;
+
+  --shadow-sm:     0 1px 3px rgba(44, 40, 36, 0.06);
+  --shadow-md:     0 4px 16px rgba(44, 40, 36, 0.08);
+  --shadow-lg:     0 8px 30px rgba(44, 40, 36, 0.12);
+
+  --radius:        2px;
+  --page-pad:      clamp(1.5rem, 5vw, 5rem);
+  --section-gap:   clamp(2.5rem, 6vw, 5rem);
+}
+
+// ── Dark Mode ─────────────────────────────────────────────
+.body--dark {
+  --bg:            #1A1815;
+  --bg-alt:        #22201C;
+  --bg-card:       #2A2723;
+  --text:          #E0DBD5;
+  --text-secondary:#9A9490;
+  --text-caption:  #6E6862;
+  --accent:        #C6A882;
+  --accent-muted:  #A67C52;
+  --border:        #3A3632;
+  --overlay:       rgba(10, 9, 8, 0.7);
+}
+
+// ── Base ──────────────────────────────────────────────────
+body {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+.text-h1, .text-h2, .text-h3, .text-h4, .text-h5, .text-h6 {
+  font-family: var(--font-serif) !important;
+  font-weight: 400;
+  color: var(--text) !important;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+a { color: var(--accent); }
+
+::selection {
+  background: var(--accent-muted);
+  color: var(--bg-card);
+}
+
+// ── Scrollbar ─────────────────────────────────────────────
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+  &:hover { background: var(--text-caption); }
+}
+
+// ── Header ────────────────────────────────────────────────
+.app-header {
+  background: rgba(245, 240, 235, 0.88) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: none !important;
+
+  .body--dark & {
+    background: rgba(26, 24, 21, 0.88) !important;
+  }
+
+  .q-toolbar {
+    min-height: 56px;
+    padding: 0 var(--page-pad);
+  }
+
+  // Override Quasar button colors in header
+  .q-btn {
+    color: var(--text-secondary) !important;
+    &:hover { color: var(--accent) !important; }
+  }
+}
+
+.app-title {
+  font-family: var(--font-serif) !important;
+  font-weight: 300;
+  font-size: 1.25rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text) !important;
+}
+
+// ── Map ───────────────────────────────────────────────────
+.map-fullscreen {
+  width: 100%;
+  height: calc(100vh - 57px);
+}
+
+.map-picker {
+  height: 320px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+// ── Leaflet Popup ─────────────────────────────────────────
+.themed-popup .leaflet-popup-content-wrapper,
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-lg) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  padding: 0 !important;
+}
+.themed-popup .leaflet-popup-tip,
+.leaflet-popup-tip {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-left: none;
+  box-shadow: none !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  min-width: 260px;
+}
+.leaflet-popup-close-button {
+  display: none !important;
+}
+.map-popup {
+  &__image {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    display: block;
+    filter: saturate(0.92);
+  }
+  &__body {
+    padding: 16px 20px 18px;
+    background: var(--bg-card);
+  }
+  &__title {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 2px;
+    line-height: 1.25;
+  }
+  &__description {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-height: 40px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  &__meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-caption);
+  }
+  &__count,
+  &__date {
+    white-space: nowrap;
+  }
+  &__link {
+    margin-top: 14px;
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    cursor: pointer;
+    transition: opacity 0.2s;
+    &:hover { opacity: 0.7; }
+  }
+}
+
+// ── Masonry Gallery (client) ──────────────────────────────
+.photo-masonry {
+  columns: 3;
+  column-gap: 20px;
+  @media (max-width: 1024px) { columns: 2; }
+  @media (max-width: 600px)  { columns: 1; }
+}
+
+.photo-masonry-item {
+  break-inside: avoid;
+  margin-bottom: 20px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  box-shadow: none;
+  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+              box-shadow 0.4s ease;
+
+  img {
+    width: 100%;
+    display: block;
+    filter: saturate(0.92);
+    transition: filter 0.5s ease, transform 0.5s ease;
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+
+    img {
+      filter: saturate(1);
+      transform: scale(1.015);
+    }
+  }
+}
+
+// ── Photo Grid (admin) ────────────────────────────────────
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.photo-card-item {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    .photo-actions-overlay { opacity: 1; }
+  }
+
+  img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.photo-actions-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 6px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.25s;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.35), transparent);
+}
+
+// ── Location Hero ─────────────────────────────────────────
+.location-hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--section-gap);
+
+  img {
+    width: 100%;
+    height: 50vh;
+    min-height: 320px;
+    max-height: 560px;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 48px var(--page-pad) 40px;
+    background: linear-gradient(transparent, var(--overlay));
+    color: #F5F0EB;
+
+    .text-h3, .text-h4 {
+      font-family: var(--font-serif) !important;
+      color: #F5F0EB !important;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+    }
+  }
+}
+
+// ── Stat Cards ────────────────────────────────────────────
+.stat-card {
+  border-radius: var(--radius) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  transition: box-shadow 0.3s ease;
+
+  &:hover { box-shadow: var(--shadow-md) !important; }
+
+  .stat-value {
+    font-family: var(--font-serif);
+    font-size: 3.5rem;
+    font-weight: 300;
+    color: var(--text);
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-caption);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+}
+
+// ── Lightbox ──────────────────────────────────────────────
+.lightbox-card {
+  background: rgba(0, 0, 0, 0.97) !important;
+}
+
+.lightbox-nav-btn {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(8px);
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+  z-index: 1;
+
+  &:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .q-btn__content {
+    padding: 0;
+  }
+
+  .q-focus-helper {
+    display: none !important;
+  }
+
+  &--left {
+    position: absolute;
+    left: 24px;
+  }
+  &--right {
+    position: absolute;
+    right: 24px;
+  }
+}
+
+// ── Upload Zone ───────────────────────────────────────────
+.upload-zone {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 48px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.3s;
+  background: transparent;
+
+  &:hover {
+    border-color: var(--accent);
+    background: rgba(166, 124, 82, 0.04);
+  }
+}
+
+// ── Location Cards (admin) ────────────────────────────────
+.location-list-card {
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md) !important;
+  }
+}
+
+// ── Cover Ring ────────────────────────────────────────────
+.cover-ring {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+// ── Language Tabs ─────────────────────────────────────────
+.lang-tabs .q-tab {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+// ── Buttons ───────────────────────────────────────────────
+.btn-accent {
+  background: var(--accent) !important;
+  color: var(--bg-card) !important;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 0;
+  box-shadow: none;
+  transition: opacity 0.2s;
+
+  &:hover { opacity: 0.85; }
+}
+
+.btn-outline {
+  background: transparent !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 0;
+  transition: background 0.2s, color 0.2s;
+
+  &:hover {
+    background: var(--accent) !important;
+    color: var(--bg-card) !important;
+  }
+}
+
+// ── Login Card ────────────────────────────────────────────
+.login-card {
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+
+  &__header {
+    background: var(--text);
+  }
+}
+
+// ── Text Utilities ────────────────────────────────────────
+.text-serif {
+  font-family: var(--font-serif);
+}
+.text-upper {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-caption);
+}
+.text-description {
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  max-width: 680px;
+}
+
+// ── Page Animation ────────────────────────────────────────
+.q-page {
+  animation: fadeUp 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Quasar Overrides ──────────────────────────────────────
+.q-card {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.q-page {
+  background: var(--bg);
+}
+.q-field--filled .q-field__control {
+  border-radius: var(--radius) !important;
+}

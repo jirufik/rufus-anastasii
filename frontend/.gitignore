@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+.quasar/
+
+# Environment
+.env
+.env.*
+!.env.example

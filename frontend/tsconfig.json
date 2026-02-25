@@ -1,0 +1,10 @@
+{
+  "extends": "./node_modules/@quasar/app-vite/types/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "src/*": ["src/*"]
+    }
+  },
+  "exclude": ["./dist", "./.quasar", "./node_modules"]
+}
