@@ -81,6 +81,7 @@ export class ClientApiController {
         res.status(HttpStatus.NOT_FOUND).json({ message: 'File not found' });
         return;
       }
+      res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
       res.sendFile(filePath);
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
@@ -100,6 +101,7 @@ export class ClientApiController {
         res.status(HttpStatus.NOT_FOUND).json({ message: 'File not found' });
         return;
       }
+      res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
       res.sendFile(filePath);
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });

@@ -25,5 +25,5 @@ export const DEFAULT_SERVICE_HTTP_PORT: number = 3000;
 export const DEFAULT_JWT_EXPIRES_IN: string = '24h';
 export const DEFAULT_UPLOAD_DIR: string = './uploads';
 export const DEFAULT_MAX_FILE_SIZE_MB: number = 50;
-export const DEFAULT_GROUPING_PROXIMITY_METERS: number = 200;
+export const DEFAULT_GROUPING_PROXIMITY_METERS: number = 350;
 export const DEFAULT_BCRYPT_SALT_ROUNDS: number = 10;

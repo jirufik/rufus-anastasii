@@ -488,3 +488,69 @@ uploads/
 Доступен по адресу: http://localhost:3000/api-docs
 
 Все эндпоинты документированы через декораторы `@ApiTags`, `@ApiBearerAuth`, `@ApiOperation`.
+
+---
+
+## Деплой
+
+### Сервер
+
+| Параметр | Значение |
+|----------|----------|
+| **Хост** | `hz-vps` (95.217.134.189) |
+| **SSH порт** | 38 |
+| **Пользователь** | rufus |
+| **SSH ключ** | `~/.ssh/hz-vps-rfs` |
+| **Сайт** | https://love.rufus.pro |
+
+### Структура на сервере
+
+```
+/opt/apps/
+├── docker-compose.yml          # Общая инфра: nginx-proxy-manager, portainer, postgres
+├── .env                        # Общие переменные (DB_USER, DB_PASSWORD, DB_NAME, ...)
+├── nginx-proxy-manager/        # Reverse proxy + SSL (Let's Encrypt)
+├── portainer/                  # Управление контейнерами (UI)
+├── postgres/                   # PostgreSQL 16 data
+├── rufus-anastasii/            # Наш проект
+│   ├── docker-compose.yml      # Backend + Frontend (без postgres — используется общий)
+│   ├── .env                    # Секреты проекта (JWT_SECRET, ADMIN_PASSWORD, ...)
+│   ├── backend/
+│   ├── frontend/
+│   └── uploads/                # Загруженные фото (Docker volume)
+├── caferacer/                  # Другой проект
+├── magicball/                  # Другой проект
+└── infra/
+```
+
+### Отличия серверного docker-compose от локального
+
+- **Нет postgres** — используется общий из `/opt/apps/docker-compose.yml`
+- **Внешние сети** — `proxy` (для nginx-proxy-manager) и `backend` (для postgres)
+- **API_URL** — `https://love.rufus.pro` (вместо `http://localhost:3000`)
+- **Серверный `.env`** — отдельные секреты, отличаются от локальных
+
+### Процесс деплоя
+
+```bash
+# 1. Синхронизировать код (rsync, исключая конфиги и тяжёлые каталоги)
+rsync -avz --progress \
+  --exclude='node_modules' --exclude='dist' --exclude='.git' \
+  --exclude='uploads' --exclude='docker-compose.yml' \
+  --exclude='.env' --exclude='.env.development' --exclude='.idea' \
+  -e 'ssh -p 38 -i ~/.ssh/hz-vps-rfs' \
+  ./backend/ rufus@95.217.134.189:/opt/apps/rufus-anastasii/backend/
+
+rsync -avz --progress \
+  --exclude='node_modules' --exclude='dist' --exclude='.git' --exclude='.idea' \
+  -e 'ssh -p 38 -i ~/.ssh/hz-vps-rfs' \
+  ./frontend/ rufus@95.217.134.189:/opt/apps/rufus-anastasii/frontend/
+
+# 2. Пересобрать и перезапустить контейнеры
+ssh hz-vps "cd /opt/apps/rufus-anastasii && docker compose up --build -d"
+```
+
+**Важно:**
+- **Не перезаписывать** `docker-compose.yml` и `.env` на сервере — они отличаются от локальных
+- Docker сам ставит `node_modules` при сборке (multi-stage build в Dockerfile)
+- `uploads/` — Docker volume, данные сохраняются между пересборками

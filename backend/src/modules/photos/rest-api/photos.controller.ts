@@ -89,6 +89,18 @@ export class PhotosController {
     }
   }
 
+  @Post('delete-batch')
+  async deleteBatch(@Body('ids') ids: string[]): Promise<void> {
+    try {
+      await this.photosProcessService.deletePhotos({ ids });
+    } catch (error) {
+      processHttpError({
+        error,
+        errorPatterns: DEFAULT_THROW_PATTERN_ERROR,
+      });
+    }
+  }
+
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<void> {
     try {

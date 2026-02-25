@@ -14,6 +14,7 @@ describe('BasicPhotosActionsService', () => {
       findAllPhotos: vi.fn(),
       updatePhoto: vi.fn(),
       deletePhoto: vi.fn(),
+      findByOriginalFilename: vi.fn(),
     };
     logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() };
 
@@ -128,6 +129,49 @@ describe('BasicPhotosActionsService', () => {
       await service.delete({ id: '1' });
 
       expect(photosRepository.deletePhoto).toHaveBeenCalledWith({ id: '1' });
+    });
+  });
+
+  describe('findByOriginalFilename', () => {
+    it('should return photo by originalFilename', async () => {
+      const photo = { id: '1', originalFilename: 'test.jpg' };
+      photosRepository.findByOriginalFilename.mockResolvedValue(photo);
+
+      const result = await service.findByOriginalFilename({ originalFilename: 'test.jpg' });
+
+      expect(photosRepository.findByOriginalFilename).toHaveBeenCalledWith({ originalFilename: 'test.jpg' });
+      expect(result).toEqual(photo);
+    });
+
+    it('should return undefined when not found', async () => {
+      photosRepository.findByOriginalFilename.mockResolvedValue(undefined);
+
+      const result = await service.findByOriginalFilename({ originalFilename: 'nonexistent.jpg' });
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should throw error if originalFilename is empty', async () => {
+      await expect(service.findByOriginalFilename({ originalFilename: '' })).rejects.toThrow('originalFilename not filled.');
+    });
+  });
+
+  describe('deleteMany', () => {
+    it('should delete multiple photos via repository', async () => {
+      photosRepository.deletePhoto.mockResolvedValue(undefined);
+
+      await service.deleteMany({ ids: ['1', '2', '3'] });
+
+      expect(photosRepository.deletePhoto).toHaveBeenCalledTimes(3);
+      expect(photosRepository.deletePhoto).toHaveBeenCalledWith({ id: '1' });
+      expect(photosRepository.deletePhoto).toHaveBeenCalledWith({ id: '2' });
+      expect(photosRepository.deletePhoto).toHaveBeenCalledWith({ id: '3' });
+    });
+
+    it('should do nothing when ids array is empty', async () => {
+      await service.deleteMany({ ids: [] });
+
+      expect(photosRepository.deletePhoto).not.toHaveBeenCalled();
     });
   });
 

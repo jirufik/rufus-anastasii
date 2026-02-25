@@ -156,6 +156,49 @@ export class BasicPhotosActionsService extends BaseService {
   }
 
   @Transactional()
+  async findByOriginalFilename(params: { originalFilename: string }): Promise<PhotoDo | undefined> {
+    try {
+      const { originalFilename } = params;
+
+      if (!originalFilename) {
+        throw new Error('originalFilename not filled.');
+      }
+
+      const photo: PhotoDo | undefined = await this.photosRepository.findByOriginalFilename({ originalFilename });
+      return photo;
+    } catch (error) {
+      this.logger.error({
+        message: error,
+        context: `${this.serviceName}.findByOriginalFilename error`,
+        data: { params },
+      });
+      throw error;
+    }
+  }
+
+  @Transactional()
+  async deleteMany(params: { ids: string[] }): Promise<void> {
+    try {
+      const { ids } = params;
+
+      if (!ids?.length) {
+        return;
+      }
+
+      for (const id of ids) {
+        await this.photosRepository.deletePhoto({ id });
+      }
+    } catch (error) {
+      this.logger.error({
+        message: error,
+        context: `${this.serviceName}.deleteMany error`,
+        data: { params },
+      });
+      throw error;
+    }
+  }
+
+  @Transactional()
   async moveToLocation(params: { photoId: string; locationId: string | null }): Promise<PhotoDo> {
     try {
       const { photoId, locationId } = params;

@@ -93,6 +93,22 @@ export class PhotosRepositoryService extends BaseCrudService<PhotoEntity> {
   }
 
   @Transactional()
+  async findByOriginalFilename(params: { originalFilename: string }): Promise<PhotoDo | undefined> {
+    try {
+      const entities: PhotoEntity[] = await this.findEntities({
+        filters: { and: [{ field: 'originalFilename', operator: FindOperator.EQ, value: params.originalFilename }] },
+        sort: [{ field: 'createdAt', order: SortOrder.DESC }],
+      });
+      if (!entities.length) return undefined;
+      const photo: PhotoDo = entities[0].toDomainObject(PhotoDo);
+      return photo;
+    } catch (error) {
+      this.logger.error({ message: error, context: `${this.serviceName}.findByOriginalFilename error`, data: { params } });
+      throw error;
+    }
+  }
+
+  @Transactional()
   async deletePhoto(params: { id: string }): Promise<void> {
     try {
       await this.deleteEntity({ id: params.id, options: { softDelete: true } });

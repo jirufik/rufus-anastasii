@@ -7,6 +7,7 @@ vi.mock('node:fs', () => ({
   promises: {
     writeFile: vi.fn().mockResolvedValue(undefined),
     rename: vi.fn().mockResolvedValue(undefined),
+    unlink: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -30,6 +31,8 @@ describe('PhotosProcessService', () => {
       update: vi.fn(),
       delete: vi.fn(),
       moveToLocation: vi.fn(),
+      findByOriginalFilename: vi.fn(),
+      deleteMany: vi.fn(),
     };
     exifExtractor = {
       extract: vi.fn().mockResolvedValue({
@@ -96,6 +99,7 @@ describe('PhotosProcessService', () => {
 
       const createdPhoto = { id: '1', originalFilename: 'photo.jpg' };
       basicPhotosActions.create.mockResolvedValue(createdPhoto);
+      basicPhotosActions.findByOriginalFilename.mockResolvedValue(undefined);
 
       const result = await service.processFile({ file });
 
@@ -106,6 +110,50 @@ describe('PhotosProcessService', () => {
       expect(result).toEqual(createdPhoto);
     });
 
+    it('should detect duplicate and delete old files before uploading', async () => {
+      const fs = await import('node:fs');
+      const file = {
+        originalname: 'photo.jpg',
+        buffer: Buffer.from('data'),
+        mimetype: 'image/jpeg',
+        size: 2048,
+      } as Express.Multer.File;
+
+      const existingPhoto = {
+        id: 'old-1',
+        originalFilename: 'photo.jpg',
+        filePath: '/uploads/originals/old.jpg',
+        thumbnailPath: '/uploads/thumbnails/old.jpg',
+      };
+      basicPhotosActions.findByOriginalFilename.mockResolvedValue(existingPhoto);
+      basicPhotosActions.delete.mockResolvedValue(undefined);
+      basicPhotosActions.create.mockResolvedValue({ id: 'new-1', originalFilename: 'photo.jpg' });
+
+      await service.processFile({ file });
+
+      expect(fs.promises.unlink).toHaveBeenCalledWith('/uploads/originals/old.jpg');
+      expect(fs.promises.unlink).toHaveBeenCalledWith('/uploads/thumbnails/old.jpg');
+      expect(basicPhotosActions.delete).toHaveBeenCalledWith({ id: 'old-1' });
+      expect(basicPhotosActions.create).toHaveBeenCalled();
+    });
+
+    it('should skip duplicate removal when no existing photo found', async () => {
+      const file = {
+        originalname: 'new-photo.jpg',
+        buffer: Buffer.from('data'),
+        mimetype: 'image/jpeg',
+        size: 2048,
+      } as Express.Multer.File;
+
+      basicPhotosActions.findByOriginalFilename.mockResolvedValue(undefined);
+      basicPhotosActions.create.mockResolvedValue({ id: '1' });
+
+      await service.processFile({ file });
+
+      expect(basicPhotosActions.delete).not.toHaveBeenCalled();
+      expect(basicPhotosActions.create).toHaveBeenCalled();
+    });
+
     it('should convert HEIC to JPEG', async () => {
       const file = {
         originalname: 'photo.heic',
@@ -114,6 +162,7 @@ describe('PhotosProcessService', () => {
         size: 4096,
       } as Express.Multer.File;
 
+      basicPhotosActions.findByOriginalFilename.mockResolvedValue(undefined);
       basicPhotosActions.create.mockResolvedValue({ id: '1' });
 
       await service.processFile({ file });
@@ -130,6 +179,7 @@ describe('PhotosProcessService', () => {
         size: 8192,
       } as Express.Multer.File;
 
+      basicPhotosActions.findByOriginalFilename.mockResolvedValue(undefined);
       basicPhotosActions.create.mockResolvedValue({ id: '1' });
 
       await service.processFile({ file });
@@ -197,6 +247,16 @@ describe('PhotosProcessService', () => {
       await service.deletePhoto({ id: '1' });
 
       expect(basicPhotosActions.delete).toHaveBeenCalledWith({ id: '1' });
+    });
+  });
+
+  describe('deletePhotos', () => {
+    it('should delegate to basicPhotosActions.deleteMany', async () => {
+      basicPhotosActions.deleteMany.mockResolvedValue(undefined);
+
+      await service.deletePhotos({ ids: ['1', '2'] });
+
+      expect(basicPhotosActions.deleteMany).toHaveBeenCalledWith({ ids: ['1', '2'] });
     });
   });
 

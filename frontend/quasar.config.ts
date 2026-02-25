@@ -13,7 +13,7 @@ export default configure(() => {
       typescript: { strict: true, vueShim: true },
       vueRouterMode: 'history',
       env: {
-        API_URL: 'http://localhost:3000',
+        API_URL: process.env.API_URL || 'http://localhost:3000',
       },
     },
 

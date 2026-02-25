@@ -56,9 +56,9 @@ export const clientApi = {
 };
 
 export const adminApi = {
-  async uploadPhotos(files: File[]): Promise<PhotoDto[]> {
+  async uploadPhoto(file: File): Promise<PhotoDto[]> {
     const formData = new FormData();
-    files.forEach((file: File) => formData.append('files', file));
+    formData.append('files', file);
     const response = await api.post('/api/v1/admin/photos/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -79,6 +79,10 @@ export const adminApi = {
 
   async deletePhoto(id: string): Promise<void> {
     await api.delete(`/api/v1/admin/photos/${id}`);
+  },
+
+  async deletePhotos(ids: string[]): Promise<void> {
+    await api.post('/api/v1/admin/photos/delete-batch', { ids });
   },
 
   async movePhoto(id: string, locationId: string | null): Promise<PhotoDto> {

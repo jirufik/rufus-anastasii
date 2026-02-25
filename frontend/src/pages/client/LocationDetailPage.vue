@@ -53,7 +53,7 @@
 
     <!-- Lightbox -->
     <q-dialog v-model="lightboxOpen" maximized transition-show="fade" transition-hide="fade">
-      <q-card class="lightbox-card" @click="lightboxOpen = false">
+      <q-card class="lightbox-card">
         <div class="absolute-top q-pa-md row items-center" style="z-index: 2">
           <q-space />
           <span class="text-white text-caption q-mr-md" style="opacity: 0.5; font-family: var(--font-sans); letter-spacing: 0.1em">
@@ -62,7 +62,12 @@
           <q-btn flat round icon="close" color="white" size="sm" class="lightbox-nav-btn" v-close-popup />
         </div>
 
-        <div class="flex flex-center" style="height: 100vh" @click.stop>
+        <div
+          class="flex flex-center"
+          style="height: 100vh"
+          @touchstart="onTouchStart"
+          @touchend="onTouchEnd"
+        >
           <q-btn
             v-if="currentPhotoIndex > 0"
             flat round icon="chevron_left" color="white" size="sm"
@@ -73,6 +78,7 @@
             v-if="photos[currentPhotoIndex]"
             :src="getPhotoUrl(photos[currentPhotoIndex].id)"
             style="max-width: 92vw; max-height: 92vh; object-fit: contain"
+            @click.stop="handleLightboxClick($event)"
           />
           <q-btn
             v-if="currentPhotoIndex < photos.length - 1"
@@ -126,6 +132,29 @@ function prevPhoto(): void {
 
 function nextPhoto(): void {
   if (currentPhotoIndex.value < photos.value.length - 1) currentPhotoIndex.value++;
+}
+
+// Swipe navigation
+let touchStartX: number = 0;
+
+function onTouchStart(e: TouchEvent): void {
+  touchStartX = e.touches[0].clientX;
+}
+
+function onTouchEnd(e: TouchEvent): void {
+  const delta: number = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(delta) > 50) {
+    if (delta > 0) prevPhoto();
+    else nextPhoto();
+  }
+}
+
+// Click navigation: left half → prev, right half → next
+function handleLightboxClick(e: MouseEvent): void {
+  const x: number = e.clientX;
+  const half: number = window.innerWidth / 2;
+  if (x < half) prevPhoto();
+  else nextPhoto();
 }
 
 // Keyboard navigation: lightbox arrows + escape, page-level escape to go back

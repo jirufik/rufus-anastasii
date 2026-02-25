@@ -44,7 +44,6 @@ export class PhotosProcessService extends BaseService {
     }
   }
 
-  @Transactional()
   async uploadPhotos(params: { files: Express.Multer.File[] }): Promise<PhotoDo[]> {
     try {
       const { files } = params;
@@ -69,6 +68,22 @@ export class PhotosProcessService extends BaseService {
   async processFile(params: { file: Express.Multer.File }): Promise<PhotoDo> {
     try {
       const { file } = params;
+
+      // Detect and remove duplicate by originalFilename
+      const existing: PhotoDo | undefined = await this.basicPhotosActions.findByOriginalFilename({
+        originalFilename: file.originalname,
+      });
+      if (existing) {
+        // Remove old files from disk
+        for (const filePath of [existing.filePath, existing.thumbnailPath]) {
+          if (filePath && fs.existsSync(filePath)) {
+            await fs.promises.unlink(filePath);
+          }
+        }
+        // Soft-delete old DB record
+        await this.basicPhotosActions.delete({ id: existing.id });
+      }
+
       const fileId: string = uuidv4();
       const ext: string = path.extname(file.originalname).toLowerCase();
       const mediaType: string = this.getMediaType({ ext });
@@ -233,6 +248,21 @@ export class PhotosProcessService extends BaseService {
       this.logger.error({
         message: error,
         context: `${this.serviceName}.deletePhoto error`,
+        data: { params },
+      });
+      throw error;
+    }
+  }
+
+  @Transactional()
+  async deletePhotos(params: { ids: string[] }): Promise<void> {
+    try {
+      const { ids } = params;
+      await this.basicPhotosActions.deleteMany({ ids });
+    } catch (error) {
+      this.logger.error({
+        message: error,
+        context: `${this.serviceName}.deletePhotos error`,
         data: { params },
       });
       throw error;

@@ -20,6 +20,7 @@ describe('PhotosController (integration)', () => {
       findById: vi.fn(),
       updatePhoto: vi.fn().mockResolvedValue({ id: '1' }),
       deletePhoto: vi.fn().mockResolvedValue(undefined),
+      deletePhotos: vi.fn().mockResolvedValue(undefined),
       rotatePhoto: vi.fn().mockResolvedValue({ id: '1' }),
       moveToLocation: vi.fn().mockResolvedValue({ id: '1' }),
     };
@@ -101,6 +102,23 @@ describe('PhotosController (integration)', () => {
       .set(key, value)
       .send({ sortOrder: 5 });
     expect(res.status).toBe(200);
+  });
+
+  it('POST /api/v1/admin/photos/delete-batch — without token → 401', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/admin/photos/delete-batch')
+      .send({ ids: ['1', '2'] });
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/v1/admin/photos/delete-batch — with token → 201', async () => {
+    const { key, value } = withAuth();
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/admin/photos/delete-batch')
+      .set(key, value)
+      .send({ ids: ['1', '2'] });
+    expect(res.status).toBe(201);
+    expect(photosProcessService.deletePhotos).toHaveBeenCalledWith({ ids: ['1', '2'] });
   });
 
   it('DELETE /api/v1/admin/photos/:id — with token → 200', async () => {
