@@ -98,6 +98,7 @@ npx quasar dev
 
 ```
 rufus-anastasii/
+├── README.md
 ├── docker/                  # Docker Compose для PostgreSQL
 │   └── docker-compose.yml
 ├── backend/                 # NestJS API
@@ -121,7 +122,8 @@ rufus-anastasii/
 │       ├── router/          # Маршрутизация
 │       ├── services/        # API-клиенты
 │       └── stores/          # Pinia stores
-└── PLAN.md
+├── PLAN.md
+└── .gitignore
 ```
 
 ### Backend: слоистая архитектура (DDD)
@@ -250,6 +252,7 @@ curl -X POST http://localhost:3000/api/v1/auth/login \
 | GET | `/api/v1/admin/photos/:id` | Bearer | Одно фото |
 | PUT | `/api/v1/admin/photos/:id` | Bearer | Обновить метаданные |
 | DELETE | `/api/v1/admin/photos/:id` | Bearer | Удалить (soft delete) |
+| POST | `/api/v1/admin/photos/delete-batch` | Bearer | Массовое удаление (body: {ids: string[]}) |
 | PUT | `/api/v1/admin/photos/:id/rotate` | Bearer | Повернуть (body: {degrees}) |
 | PUT | `/api/v1/admin/photos/:id/move` | Bearer | Переместить в локацию (body: {locationId}) |
 
@@ -295,8 +298,8 @@ curl -X POST http://localhost:3000/api/v1/auth/login \
 |-------|------|------|---------|
 | GET | `/api/v1/client/locations` | Public | Все локации с фото (фильтр: photoCount > 0) |
 | GET | `/api/v1/client/locations/:id` | Public | Локация + все её фото |
-| GET | `/api/v1/client/photos/:id/file` | Public | Скачать полное фото |
-| GET | `/api/v1/client/photos/:id/thumbnail` | Public | Скачать миниатюру 600x600 |
+| GET | `/api/v1/client/photos/:id/file` | Public | Скачать полное фото (Cache-Control: 7 дней) |
+| GET | `/api/v1/client/photos/:id/thumbnail` | Public | Скачать миниатюру 600x600 (Cache-Control: 7 дней) |
 
 ---
 
@@ -322,7 +325,7 @@ curl -X POST http://localhost:3000/api/v1/auth/login \
 
 **DashboardPage** — статистика (кол-во локаций, фото, несгруппированных фото), быстрые действия: загрузка фото, автогруппировка, заполнение названий.
 
-**PhotosManagePage** — drag-and-drop загрузка, фильтрация по локации, действия над фото: поворот на 90°, удаление, перемещение в локацию.
+**PhotosManagePage** — drag-and-drop загрузка, фильтрация по локации, действия над фото: поворот на 90°, удаление (одиночное и массовое), перемещение в локацию, сортировка перетаскиванием.
 
 **LocationsManagePage** — карточки локаций с обложкой, координатами, кол-вом фото. Переход на редактирование.
 
