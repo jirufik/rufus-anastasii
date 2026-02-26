@@ -500,11 +500,9 @@ uploads/
 
 | Параметр | Значение |
 |----------|----------|
-| **Хост** | `hz-vps` (95.217.134.189) |
-| **SSH порт** | 38 |
-| **Пользователь** | rufus |
-| **SSH ключ** | `~/.ssh/hz-vps-rfs` |
 | **Сайт** | https://love.rufus.pro |
+
+> Подключение к серверу (IP, SSH порт, ключ) — см. локальный `~/.ssh/config`
 
 ### Структура на сервере
 
@@ -517,9 +515,7 @@ uploads/
 │   ├── backend/
 │   ├── frontend/
 │   └── uploads/                   # Загруженные фото (Docker volume)
-├── caferacer/                     # git repo
-├── magicball/                     # git repo
-└── infra/                         # Общая инфра: NPM, Portainer, PostgreSQL
+└── infra/                         # Общая инфра
 ```
 
 ### Отличия серверного docker-compose от локального
@@ -533,7 +529,7 @@ uploads/
 
 ```bash
 # Одна команда с локальной машины:
-ssh hz-vps "/opt/apps/deploy.sh rufus-anastasii"
+ssh <server> "/opt/apps/deploy.sh rufus-anastasii"
 ```
 
 Скрипт автоматически: `git pull` → `docker compose build & up` → проверка здоровья контейнеров → очистка образов и build cache.

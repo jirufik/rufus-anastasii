@@ -76,9 +76,9 @@ services:
     image: postgres:16-alpine
     ports: ["5454:5432"]
     environment:
-      POSTGRES_USER: rufus
-      POSTGRES_PASSWORD: anastasii
-      POSTGRES_DB: rufus_anastasii
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes: [pgdata:/var/lib/postgresql/data]
 volumes:
   pgdata:
