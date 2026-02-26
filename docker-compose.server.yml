@@ -1,0 +1,50 @@
+services:
+  rufus-anastasii-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rufus-anastasii-backend
+    restart: unless-stopped
+    environment:
+      SRV_NODE: rufus-anastasii-api
+      NODE_ENV: production
+      SERVICE_HTTP_PORT: "3000"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 24h
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      UPLOAD_DIR: /app/uploads
+      MAX_FILE_SIZE_MB: "50"
+      GROUPING_PROXIMITY_METERS: "200"
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - proxy
+      - backend
+
+  rufus-anastasii-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_URL: https://love.rufus.pro
+    container_name: rufus-anastasii-frontend
+    restart: unless-stopped
+    depends_on:
+      - rufus-anastasii-backend
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+  backend:
+    external: true
+
+volumes:
+  uploads:
