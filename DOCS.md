@@ -510,50 +510,35 @@ uploads/
 
 ```
 /opt/apps/
-├── docker-compose.yml          # Общая инфра: nginx-proxy-manager, portainer, postgres
-├── .env                        # Общие переменные (DB_USER, DB_PASSWORD, DB_NAME, ...)
-├── nginx-proxy-manager/        # Reverse proxy + SSL (Let's Encrypt)
-├── portainer/                  # Управление контейнерами (UI)
-├── postgres/                   # PostgreSQL 16 data
-├── rufus-anastasii/            # Наш проект
-│   ├── docker-compose.yml      # Backend + Frontend (без postgres — используется общий)
-│   ├── .env                    # Секреты проекта (JWT_SECRET, ADMIN_PASSWORD, ...)
+├── deploy.sh                      # Единый скрипт деплоя всех проектов
+├── rufus-anastasii/               # git repo
+│   ├── docker-compose.server.yml  # Серверный compose (без postgres, внешние сети)
+│   ├── .env                       # Секреты проекта (gitignored)
 │   ├── backend/
 │   ├── frontend/
-│   └── uploads/                # Загруженные фото (Docker volume)
-├── caferacer/                  # Другой проект
-├── magicball/                  # Другой проект
-└── infra/
+│   └── uploads/                   # Загруженные фото (Docker volume)
+├── caferacer/                     # git repo
+├── magicball/                     # git repo
+└── infra/                         # Общая инфра: NPM, Portainer, PostgreSQL
 ```
 
 ### Отличия серверного docker-compose от локального
 
-- **Нет postgres** — используется общий из `/opt/apps/docker-compose.yml`
+- **Файл:** `docker-compose.server.yml` (закоммичен в репо)
+- **Нет postgres** — используется общий из `/opt/apps/infra/docker-compose.yml`
 - **Внешние сети** — `proxy` (для nginx-proxy-manager) и `backend` (для postgres)
 - **API_URL** — `https://love.rufus.pro` (вместо `http://localhost:3000`)
-- **Серверный `.env`** — отдельные секреты, отличаются от локальных
 
 ### Процесс деплоя
 
 ```bash
-# 1. Синхронизировать код (rsync, исключая конфиги и тяжёлые каталоги)
-rsync -avz --progress \
-  --exclude='node_modules' --exclude='dist' --exclude='.git' \
-  --exclude='uploads' --exclude='docker-compose.yml' \
-  --exclude='.env' --exclude='.env.development' --exclude='.idea' \
-  -e 'ssh -p 38 -i ~/.ssh/hz-vps-rfs' \
-  ./backend/ rufus@95.217.134.189:/opt/apps/rufus-anastasii/backend/
-
-rsync -avz --progress \
-  --exclude='node_modules' --exclude='dist' --exclude='.git' --exclude='.idea' \
-  -e 'ssh -p 38 -i ~/.ssh/hz-vps-rfs' \
-  ./frontend/ rufus@95.217.134.189:/opt/apps/rufus-anastasii/frontend/
-
-# 2. Пересобрать и перезапустить контейнеры
-ssh hz-vps "cd /opt/apps/rufus-anastasii && docker compose up --build -d"
+# Одна команда с локальной машины:
+ssh hz-vps "/opt/apps/deploy.sh rufus-anastasii"
 ```
 
+Скрипт автоматически: `git pull` → `docker compose build & up` → проверка здоровья контейнеров → очистка образов и build cache.
+
 **Важно:**
-- **Не перезаписывать** `docker-compose.yml` и `.env` на сервере — они отличаются от локальных
+- `.env` файлы gitignored — безопасно переживают `git pull`
 - Docker сам ставит `node_modules` при сборке (multi-stage build в Dockerfile)
 - `uploads/` — Docker volume, данные сохраняются между пересборками
